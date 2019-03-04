@@ -2,7 +2,7 @@
 
 using namespace std;
 
-void help()
+void help()//Prints the help options
 {
   cout << "Important: All commands are lower case ONLY (file and path names not included)\n";
   cout << "help.....Prints the list of acceptable instructions\n";
@@ -19,8 +19,6 @@ void help()
 char parsecommand(const string input)
 //Evaluates user input to determine the appropriate response in main
 {
-  //TODO: Generate return values based on commands
-
   switch (input.size())
   //Switch based on instruction length to simplify total comparisons
   {
@@ -55,12 +53,15 @@ char parsecommand(const string input)
       break;
   }
 
-  //if invalid command
+    //if invalid command
     return '0';
 }
 
 void chitchat(int &socket)
 //Used to recieve and print the terminal output from server after ls and pwd
 {
+  char msg[1023];
   //TODO: while loop to receive and print information recieved from the socket
+  recv(socket, msg, 1023, 0);
+  cout << msg;
 }

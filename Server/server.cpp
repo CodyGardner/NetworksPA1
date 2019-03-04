@@ -2,19 +2,18 @@
 
 #define MYPORT 5280
 #define BACKLOG 10
-#define MAXDATA 250
+#define MAXDATA 1023
 
 using namespace std;
 
 int main()
 {
-	int newfd = 0, sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	int newfd = 0, sockfd = socket(AF_INET, SOCK_STREAM, 0), re_stdout = dup(STDOUT_FILENO);
 	struct sockaddr_in myAddr;
 	struct sockaddr_in theirAddr;
 	uint sinSize = 0;
 	pid_t cpid;
-	char* hello = "Whassaaaap???!!";
-	char* resp = new char[20];
+	char* resp = new char[100];
 	string cmd, ans;
 
 //Create socket fd
@@ -53,41 +52,42 @@ int main()
 		//Fork process
 		if ((cpid = fork()) == 0)
 		{
+			//Inside new process, direct STDOUT to new socket and begin interracting with client
+			close(sockfd);//Close parent socket
+			dup2(newfd, STDOUT_FILENO);//Direct STDOUT to new socket
 			while(true)
 			{
 				recv(newfd, resp, MAXDATA, 0);
 				cmd = string(resp); //Make resp into string
-
 				//Process command and return to input
 				switch(parsecommand(cmd))
 				{
-					case 'B'://ls
+					case 'A'://ls
 						system("ls");
 						break;
-					case 'C'://pwd
+					case 'B'://pwd
 						system("pwd");
 						break;
-					case 'D'://cd
+					case 'C'://cd
 						//create substring of pathname and change directory
 						chdir(cmd.substr(3).c_str());
 						break;
-					case 'G'://get
-						cout << "Selected get";
-						//send command, branch into subprogram to download file
-						//send(sockfd, input.c_str(), MAXDATA, 0);
+					case 'D'://get
+						cout << "Requested file: " << cmd.substr(4);
+						//TODO: branch into subprogram to send requested file
 						break;
-					case 'H'://bye
-						cout << "Goodbye";
-						//send(sockfd, input.c_str(), MAXDATA, 0);
-						//TODO
-						//wait for server to close socket
-						//return
-						break;
+					case 'E'://bye
+						//close socket, end child process
+						dup2(STDOUT_FILENO, re_stdout); //Redirect stdout back to terminal
+						close(newfd);
+						exit(0);
 					default:
 						cout << "Error, command not found.  Try \"help\"";
 				}
 			}
 		}
+		else
+			close(newfd);//Close new socket being handled in child process and return to accepting
 	}
 
 	cout << endl;

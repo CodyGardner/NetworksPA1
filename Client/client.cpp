@@ -1,7 +1,7 @@
 #include "cfuncs.h"
 
 #define PORT 5280
-#define MAXDATA 250 //Most data that can be sent at once
+#define MAXDATA 1023 //Most data that can be sent at once
 
 using namespace std;
 
@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 //	int bytes = 0;
 	struct hostent *he = gethostbyname(argv[1]);
 	struct sockaddr_in addr;
-	char* buff = NULL;
+	char* buff = new char[MAXDATA];
 	string input;
 
 	if (sockfd < 0)
@@ -60,14 +60,14 @@ int main(int argc, char *argv[])
 				chdir(input.substr(4).c_str());
 				break;
 			case 'E'://ls and pwd
-				cout << "Selected ls or pwd";
-				//send(sockfd, input.c_str(), MAXDATA, 0);
+				send(sockfd, input.c_str(), MAXDATA, 0);
+				chitchat(sockfd);
 				//prepare to recieve response
 				break;
 			case 'F'://cd
 				cout << "Selected cd";
 				//send command
-				//send(sockfd, input.c_str(), MAXDATA, 0);
+				send(sockfd, input.c_str(), MAXDATA, 0);
 				break;
 			case 'G'://get
 				cout << "Selected get";
@@ -75,12 +75,9 @@ int main(int argc, char *argv[])
 				//send(sockfd, input.c_str(), MAXDATA, 0);
 				break;
 			case 'H'://bye
-				cout << "Goodbye";
-				//send(sockfd, input.c_str(), MAXDATA, 0);
-				//TODO
-				//wait for server to close socket
-				//return
-				break;
+				send(sockfd, input.c_str(), MAXDATA, 0); //Send command
+				close(sockfd);
+				return 0;
 			default:
 				cout << "Error, command not found.  Try \"help\"";
 		}
