@@ -1,15 +1,18 @@
-#include "cfuncs.h"
+/*
+    Created By: Cody Gardner
+    Environment: Linux Mint 19.1
+    This document is the main source code for an FTP client, an active project for my Graduate Networks class.
+    This project is still in progress, but currently supports the following commands: cd (client and server), ls (client and server), pwd (client and server), bye, exit, and help
+    Currently under development: get
+*/
 
-#define PORT 5280
-#define MAXDATA 1023 //Most data that can be sent at once
+#include "cfuncs.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-//	int newfd = socket(AF_INET, SOCK_STREAM, 0);
-//	int bytes = 0;
 	struct hostent *he = gethostbyname(argv[1]);
 	struct sockaddr_in addr;
 	char* buff = new char[MAXDATA];
@@ -33,7 +36,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << "FAILED TO CONNECT\n";
-		//return 1;
+		return 1;
 	}
 
 	while(true)
@@ -60,38 +63,27 @@ int main(int argc, char *argv[])
 				chdir(input.substr(4).c_str());
 				break;
 			case 'E'://ls and pwd
-				send(sockfd, input.c_str(), MAXDATA, 0);
+				//Send command, recieve response
+        send(sockfd, input.c_str(), MAXDATA, 0);
 				chitchat(sockfd);
-				//prepare to recieve response
 				break;
 			case 'F'://cd
-				cout << "Selected cd";
 				//send command
 				send(sockfd, input.c_str(), MAXDATA, 0);
 				break;
 			case 'G'://get
-				cout << "Selected get";
 				//send command, branch into subprogram to download file
-				//send(sockfd, input.c_str(), MAXDATA, 0);
+				send(sockfd, input.c_str(), MAXDATA, 0);
+				getFile(sockfd, input.substr(4));
 				break;
-			case 'H'://bye
+			case 'H'://bye and exit
 				send(sockfd, input.c_str(), MAXDATA, 0); //Send command
 				close(sockfd);
 				return 0;
 			default:
 				cout << "Error, command not found.  Try \"help\"";
 		}
-/*
-		recv(sockfd, buff, 20, 0);
-		cout << buff << endl;
-		send(sockfd, buff, 20, 0);
-*/
 	}
-
-
-//	system("pwd");
-//	chdir("..");
-//	system("pwd");
 
 	cout << endl << endl;
 

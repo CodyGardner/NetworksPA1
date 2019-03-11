@@ -41,27 +41,91 @@ char parsecommand(const string input)
         return 'A';
       if (input == "lpwd")
         return 'C';
+			if (input == "exit")
+				return 'H';
       break;
 
     default:
-      if (input.substr(0,2) == "cd")
+      if (input.substr(0,3) == "cd ")
         return 'F';
-      if (input.substr(0,3) == "lcd")
+      if (input.substr(0,4) == "lcd ")
         return 'D';
-      if (input.substr(0,3) == "get")
+      if (input.substr(0,4) == "get ")
         return 'G';
       break;
   }
-
-    //if invalid command
+    //If invalid command
     return '0';
 }
 
-void chitchat(int &socket)
+void chitchat(const int socket)
 //Used to recieve and print the terminal output from server after ls and pwd
 {
-  char msg[1023];
+  char msg[MAXDATA];
   //TODO: while loop to receive and print information recieved from the socket
-  recv(socket, msg, 1023, 0);
+  recv(socket, msg, MAXDATA, 0);
   cout << msg;
+}
+
+void getFile(const int sSocket, const std::string filename)
+//Downloads requested file
+{
+  char *buffer = new char[MAXDATA];
+  int ftpfd = 0;
+
+  //Recv OK or OOPS
+  recv(sSocket, buffer, MAXDATA, 0);
+  //If OK
+  if(!strcmp(buffer, "OK"))
+  {
+    //Open FTP socket
+    if((ftpfd = FTPSocket()) < 0)
+    {
+      cout << "ERROR CREATING SOCKET FOR FTP\n";
+      return;
+    }
+
+		//Get filesize and download
+		recv(ftpfd, buffer, MAXDATA, 0);
+		download(ftpfd, filename, atoi(buffer));
+
+		//Close FTP socket
+		close(ftpfd);
+  }
+	else
+		cout << "SERVER ERROR - CANNOT OPEN FILE\n";
+}
+
+void download(const int fd, const string fname, const int fsize)
+//Opens new buffer, downloads file
+{
+	//Open buffer and file
+	char* buffer = new char[fsize+1];
+	ofstream ofs(fname, ios::binary);
+	//Get file info and close file
+	recv(fd, buffer, fsize+2, 0);
+	ofs.write(buffer, fsize);
+	ofs.close();
+	delete[] buffer;
+}
+
+int FTPSocket()
+//Builds new socket, accepts connection from server and returns file descriptor
+{
+  int newsock = socket(AF_INET, SOCK_STREAM, 0);
+  uint sinSize = 0;
+  struct sockaddr_in addr;
+  //Build address object
+
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_port = htons(FTPORT);
+  //Bind socket
+  if((bind(newsock, (struct sockaddr*)&addr, sizeof(addr)) < 0))
+    return -1;
+
+  sinSize = sizeof(struct sockaddr_in);
+  listen(newsock, 1);
+  //Accept and return new connection
+  return accept(newsock, (struct sockaddr*)&addr, &sinSize);
 }

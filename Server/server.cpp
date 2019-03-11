@@ -1,9 +1,5 @@
 #include "servfuncs.h"
 
-#define MYPORT 5280
-#define BACKLOG 10
-#define MAXDATA 1023
-
 using namespace std;
 
 int main()
@@ -16,11 +12,8 @@ int main()
 	char* resp = new char[100];
 	string cmd, ans;
 
-//Create socket fd
-	newfd = socket(AF_INET, SOCK_STREAM, 0);
-
 //Ensure it formed correctly
-	if (newfd < 0)
+	if (sockfd < 0)
 	{
 		cout << "ERROR ESTABLISHING SOCKET\n\n";
 		return 1;
@@ -48,7 +41,7 @@ int main()
 	while(true)
 	{
 		//Accept new connections
-		newfd = accept(sockfd, (struct sockaddr*)&myAddr, &sinSize);
+		newfd = accept(sockfd, (struct sockaddr*)&theirAddr, &sinSize);
 		//Fork process
 		if ((cpid = fork()) == 0)
 		{
@@ -73,8 +66,7 @@ int main()
 						chdir(cmd.substr(3).c_str());
 						break;
 					case 'D'://get
-						cout << "Requested file: " << cmd.substr(4);
-						//TODO: branch into subprogram to send requested file
+						sendFile(newfd, cmd.substr(4), theirAddr);
 						break;
 					case 'E'://bye
 						//close socket, end child process
