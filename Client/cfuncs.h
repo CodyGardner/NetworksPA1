@@ -14,7 +14,6 @@
 
 #define PORT 5280
 #define MAXDATA 1023 //Most data that can be sent at once
-#define FTPORT 9001
 
 //Functions
 void help();//Prints the help options

@@ -15,7 +15,6 @@
 #define MYPORT 5280
 #define BACKLOG 10
 #define MAXDATA 1023
-#define FTPORT 9001 //FTP traditionally uses port 20 for the data transfer
 
 char parsecommand(const std::string input);//Evaluates user input to determine the appropriate response in main
 void sendFile(int &socket, const std::string file, struct sockaddr_in &clientAddr);//Opens requested file and then sends file text through socket

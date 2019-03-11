@@ -35,7 +35,6 @@ void sendFile(int &cSocket, const std::string file, struct sockaddr_in &clientAd
 {
   //Open file, send OK or OOPS depending on whether or not the file opens properly
   ifstream ifs(file, ifstream::binary);
-  int ftpfd = 0;
   struct sockaddr_in addr;
 
   //If ok
@@ -44,18 +43,9 @@ void sendFile(int &cSocket, const std::string file, struct sockaddr_in &clientAd
     send(cSocket, "OK", MAXDATA, 0);
     //Delay, then create new socket connected to client.
     sleep(1);
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(FTPORT);
-    addr.sin_addr = clientAddr.sin_addr;
-    ftpfd = socket(AF_INET, SOCK_STREAM, 0);
 
     //If connection is successful, send file
-    if(!connect(ftpfd, (struct sockaddr *)&addr, sizeof(addr)))
-    {
-        upload(ftpfd, file, ifs);
-    }
-    //Close socket to allow future connections
-    close(ftpfd);
+        upload(cSocket, file, ifs);
   }
   else
     send(cSocket, "OOPS", MAXDATA, 0);
